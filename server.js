@@ -13,12 +13,11 @@ app.use(express.json());
 
 // 1. Cloud PostgreSQL Connection (Neon)
 const pgPool = new Pool({
-    connectionString: 'PASTE_YOUR_NEON_CONNECTION_STRING_HERE',
+    connectionString: 'postgresql://neondb_owner:npg_buH3BwIWZq9l@ep-calm-silence-a13xrzdb.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require',
     ssl: { rejectUnauthorized: false } // Required for cloud databases
 });
 
-// 2. Cloud MongoDB Connection (Atlas)
-const mongoUrl = 'PASTE_YOUR_MONGODB_DRIVERS_STRING_HERE'; 
+// 2. Cloud MongoDB Connection (Atlas) 
 const mongoUrl = 'mongodb+srv://aeronet_user:spirossstathis006_db_user@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority';
 const dbName = 'AeroNet_Docs';
 
