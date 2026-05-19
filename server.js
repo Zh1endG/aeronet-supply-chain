@@ -19,7 +19,7 @@ const pgPool = new Pool({
 
 // 2. Cloud MongoDB Connection (Atlas)
 const mongoUrl = 'PASTE_YOUR_MONGODB_DRIVERS_STRING_HERE'; 
-const mongoClient = new MongoClient(mongoUrl);
+const mongoUrl = 'mongodb+srv://aeronet_user:spirossstathis006_db_user@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority';
 const dbName = 'AeroNet_Docs';
 
 // =========================================================================
