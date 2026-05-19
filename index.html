@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AeroNet Supply Chain Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background: #eef2f3; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #004e92; color: white; }
+        h2 { color: #004e92; border-bottom: 2px solid #004e92; padding-bottom: 10px; }
+        .admin-only { display: none; background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404; font-weight: bold; margin-bottom: 10px; }
+        .btn-approve { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-reject { background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>AeroNet Supply Chain Control</h1>
+        <label><strong>Current Session Role:</strong> </label>
+        <select id="roleSelector" onchange="checkSecurity()">
+            <option value="1">Supplier (Level 1)</option>
+            <option value="3">Inspector (Level 3)</option>
+            <option value="5">System Admin (Level 5)</option>
+        </select>
+    </div>
+
+    <div class="card" id="inspectorAction" style="display:none; border: 2px solid #28a745;">
+        <h2>Safety Sign-Off (Security Requirement)</h2>
+        <p>You are authorized to certify **Item #551**. This action is permanent and will be logged.</p>
+        <button class="btn-approve" onclick="sendCertification('ITEM_551', 'AIRWORTHY')">Approve Part</button>
+        <button class="btn-reject" onclick="sendCertification('ITEM_551', 'FAILED')">Reject Part</button>
+    </div>
+
+    <div class="card">
+        <h2>Personnel Registry (PostgreSQL)</h2>
+        <table id="userTable">
+            <thead>
+                <tr><th>EmpID</th><th>Name</th><th>Role</th><th>Level</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>IoT Sensor Stream (MongoDB)</h2>
+        <div id="telemetryNotice" class="admin-only">⚠️ Restricted: Telemetry data only visible to Level 3+.</div>
+        <table id="mongoTable">
+            <thead>
+                <tr><th>Log ID</th><th>Device</th><th>Timestamp</th><th>Reading</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        // 1. Fetch SQL Data
+        async function getSqlData() {
+            const res = await fetch('http://localhost:5000/api/users');
+            const data = await res.json();
+            const body = document.querySelector('#userTable tbody');
+            body.innerHTML = data.map(u => `<tr><td>${u.empid}</td><td>${u.full_name}</td><td>${u.jobrole}</td><td>${u.accesslevel}</td></tr>`).join('');
+        }
+
+        // 2. Fetch MongoDB Data
+        async function getMongoData() {
+            try {
+                const res = await fetch('http://localhost:5000/api/telemetry');
+                const data = await res.json();
+                const body = document.querySelector('#mongoTable tbody');
+                body.innerHTML = data.map(d => `<tr><td>${d.LogID}</td><td>${d.DeviceID}</td><td>${d.Timestamp}</td><td>${d.Reading.Value} ${d.Reading.Unit}</td></tr>`).join('');
+            } catch (e) { console.log("Mongo empty or error"); }
+        }
+
+        // 3. Security Check (RBAC)
+        function checkSecurity() {
+            const level = parseInt(document.getElementById('roleSelector').value);
+            const mongoTable = document.getElementById('mongoTable');
+            const notice = document.getElementById('telemetryNotice');
+            const actionBox = document.getElementById('inspectorAction');
+
+            // Toggle visibility based on Access Level
+            if (level >= 3) {
+                mongoTable.style.display = "table";
+                notice.style.display = "none";
+                actionBox.style.display = "block";
+            } else {
+                mongoTable.style.display = "none";
+                notice.style.display = "block";
+                actionBox.style.display = "none";
+            }
+        }
+
+        // 4. Send Certification (POST to API)
+        async function sendCertification(itemId, status) {
+            const role = document.getElementById('roleSelector').value;
+            const empId = (role == "5") ? "EMP_001" : "EMP_002"; 
+
+            const response = await fetch('http://localhost:5000/api/certify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID: itemId, empID: empId, status: status })
+            });
+
+            const result = await response.json();
+            alert(result.message + " Check your VS Code terminal for the Audit Log.");
+        }
+
+        // Initial Load
+        getSqlData();
+        getMongoData();
+        checkSecurity();
+    </script>
+</body>
+</html>
