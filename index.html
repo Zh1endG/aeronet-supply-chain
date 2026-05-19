@@ -2,117 +2,302 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AeroNet Supply Chain Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroNet Logistics & IoT Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background: #eef2f3; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background: #004e92; color: white; }
-        h2 { color: #004e92; border-bottom: 2px solid #004e92; padding-bottom: 10px; }
-        .admin-only { display: none; background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404; font-weight: bold; margin-bottom: 10px; }
-        .btn-approve { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-reject { background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.8; }
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .role-selector {
+            background-color: var(--panel-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: var(--accent-blue);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .btn {
+            background-color: var(--accent-blue);
+            color: var(--bg-dark);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .badge {
+            background-color: rgba(74, 222, 128, 0.1);
+            color: var(--accent-green);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>AeroNet Supply Chain Control</h1>
-        <label><strong>Current Session Role:</strong> </label>
-        <select id="roleSelector" onchange="checkSecurity()">
-            <option value="1">Supplier (Level 1)</option>
-            <option value="3">Inspector (Level 3)</option>
-            <option value="5">System Admin (Level 5)</option>
+<div class="container">
+    <header>
+        <h1>AeroNet Supply Chain & Telemetry</h1>
+        <select id="roleSelect" class="role-selector" onchange="switchRole()">
+            <option value="Supplier">Role: Supplier View</option>
+            <option value="Inspector">Role: Inspector View</option>
+            <option value="Admin">Role: Security Admin</option>
         </select>
-    </div>
+    </header>
 
-    <div class="card" id="inspectorAction" style="display:none; border: 2px solid #28a745;">
-        <h2>Safety Sign-Off (Security Requirement)</h2>
-        <p>You are authorized to certify **Item #551**. This action is permanent and will be logged.</p>
-        <button class="btn-approve" onclick="sendCertification('ITEM_551', 'AIRWORTHY')">Approve Part</button>
-        <button class="btn-reject" onclick="sendCertification('ITEM_551', 'FAILED')">Reject Part</button>
-    </div>
+    <div class="grid">
+        <div class="card" id="personnelCard" style="display:none;">
+            <h2>Authorized Supply Chain Personnel (SQL)</h2>
+            <p style="font-size:12px; color:var(--text-muted);">Pulled directly from Neon Cloud Postgres</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Clearance</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    </tbody>
+            </table>
+        </div>
 
-    <div class="card">
-        <h2>Personnel Registry (PostgreSQL)</h2>
-        <table id="userTable">
-            <thead>
-                <tr><th>EmpID</th><th>Name</th><th>Role</th><th>Level</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+        <div class="card">
+            <h2>Live IoT Telemetry Stream (NoSQL)</h2>
+            <p style="font-size:12px; color:var(--text-muted);">Pulled directly from MongoDB Atlas Cloud</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Log ID</th>
+                        <th>Sensor Device</th>
+                        <th>Timestamp</th>
+                        <th>Reading</th>
+                    </tr>
+                </thead>
+                <tbody id="telemetryTableBody">
+                    </tbody>
+            </table>
+        </div>
 
-    <div class="card">
-        <h2>IoT Sensor Stream (MongoDB)</h2>
-        <div id="telemetryNotice" class="admin-only">⚠️ Restricted: Telemetry data only visible to Level 3+.</div>
-        <table id="mongoTable">
-            <thead>
-                <tr><th>Log ID</th><th>Device</th><th>Timestamp</th><th>Reading</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        <div class="card" id="actionCard" style="display:none;">
+            <h2>Aero-Component Certification Sign-off</h2>
+            <div class="form-group">
+                <label>Component Item ID</label>
+                <input type="text" id="formItemId" value="ITEM_551">
+            </div>
+            <div class="form-group">
+                <label>Inspector Employee ID</label>
+                <input type="text" id="formEmpId" value="EMP_002">
+            </div>
+            <button class="btn" onclick="submitCertification()">Approve & Sign Off Component</button>
+        </div>
     </div>
+</div>
 
-    <script>
-        // 1. Fetch SQL Data
-        async function getSqlData() {
-            const res = await fetch('http://localhost:5000/api/users');
-            const data = await res.json();
-            const body = document.querySelector('#userTable tbody');
-            body.innerHTML = data.map(u => `<tr><td>${u.empid}</td><td>${u.full_name}</td><td>${u.jobrole}</td><td>${u.accesslevel}</td></tr>`).join('');
+<script>
+    const BACKEND_URL = 'https://aeronet-supply-chain.onrender.com';
+
+    // Core execution paths based on active role views
+    async function switchRole() {
+        const role = document.getElementById('roleSelect').value;
+        const personnelCard = document.getElementById('personnelCard');
+        const actionCard = document.getElementById('actionCard');
+
+        if (role === 'Supplier') {
+            personnelCard.style.display = 'none';
+            actionCard.style.display = 'none';
+        } else if (role === 'Inspector') {
+            personnelCard.style.display = 'block';
+            actionCard.style.display = 'block';
+            await fetchUsers();
+        } else if (role === 'Admin') {
+            personnelCard.style.display = 'block';
+            actionCard.style.display = 'none';
+            await fetchUsers();
         }
+    }
 
-        // 2. Fetch MongoDB Data
-        async function getMongoData() {
-            try {
-                const res = await fetch('http://localhost:5000/api/telemetry');
-                const data = await res.json();
-                const body = document.querySelector('#mongoTable tbody');
-                body.innerHTML = data.map(d => `<tr><td>${d.LogID}</td><td>${d.DeviceID}</td><td>${d.Timestamp}</td><td>${d.Reading.Value} ${d.Reading.Unit}</td></tr>`).join('');
-            } catch (e) { console.log("Mongo empty or error"); }
+    // Call Neon Engine via Render API to fetch Personnel
+    async function fetchUsers() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/users`);
+            const users = await res.json();
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${u.empid}</td>
+                        <td>${u.full_name}</td>
+                        <td>${u.jobrole}</td>
+                        <td><span class="badge">Lvl ${u.accesslevel}</span></td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            console.error("Failed to pull PostgreSQL Users:", err);
         }
+    }
 
-        // 3. Security Check (RBAC)
-        function checkSecurity() {
-            const level = parseInt(document.getElementById('roleSelector').value);
-            const mongoTable = document.getElementById('mongoTable');
-            const notice = document.getElementById('telemetryNotice');
-            const actionBox = document.getElementById('inspectorAction');
+    // Call MongoDB Atlas Engine via Render API to fetch IoT Telemetry
+    async function fetchTelemetry() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/telemetry`);
+            const telemetry = await res.json();
+            const tbody = document.getElementById('telemetryTableBody');
+            tbody.innerHTML = '';
 
-            // Toggle visibility based on Access Level
-            if (level >= 3) {
-                mongoTable.style.display = "table";
-                notice.style.display = "none";
-                actionBox.style.display = "block";
-            } else {
-                mongoTable.style.display = "none";
-                notice.style.display = "block";
-                actionBox.style.display = "none";
-            }
+            telemetry.forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${t.LogID}</td>
+                        <td>${t.DeviceID}</td>
+                        <td>${new Date(t.Timestamp).toLocaleTimeString()}</td>
+                        <td style="color:#4ade80; font-weight:bold;">${t.Reading.Value} ${t.Reading.Unit}</td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            console.error("Failed to pull MongoDB Telemetry:", err);
         }
+    }
 
-        // 4. Send Certification (POST to API)
-        async function sendCertification(itemId, status) {
-            const role = document.getElementById('roleSelector').value;
-            const empId = (role == "5") ? "EMP_001" : "EMP_002"; 
+    // Post data cross-cluster to log certifications and records
+    async function submitCertification() {
+        const itemID = document.getElementById('formItemId').value;
+        const empID = document.getElementById('formEmpId').value;
 
-            const response = await fetch('http://localhost:5000/api/certify', {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/certify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ itemID: itemId, empID: empId, status: status })
+                body: JSON.stringify({ itemID, empID, status: 'PASSED_SAFETY_AUDIT' })
             });
 
             const result = await response.json();
-            alert(result.message + " Check your VS Code terminal for the Audit Log.");
+            alert(result.message);
+        } catch (err) {
+            alert("Error sending certification data to cloud infrastructure.");
         }
+    }
 
-        // Initial Load
-        getSqlData();
-        getMongoData();
-        checkSecurity();
-    </script>
+    // Initial load configurations
+    window.onload = () => {
+        fetchTelemetry();
+        switchRole();
+    };
+</script>
 </body>
 </html>
